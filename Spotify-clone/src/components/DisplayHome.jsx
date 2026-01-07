@@ -11,7 +11,7 @@ const DisplayHome = () => {
 
   const { id } = useParams();
   const albumData = albumsData[id];
-  const { playWithId } = useContext(PlayerContext)
+  const { playWithId } = useContext(PlayerContext);
 
   return (
     <>

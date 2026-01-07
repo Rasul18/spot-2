@@ -1,13 +1,15 @@
 import express from 'express'
 import mongoose from 'mongoose'
+import cors from 'cors' //cors: Чтобы разрешить вашему фронтенду (localhost:5173) брать данные с бэкенда (localhost:4000).
 import router from './router.js'
+import 'dotenv/config' //dotenv: Чтобы прятать пароли от базы данных.
 
 const app = express()
-const PORT = 5000;
-
-const DB_URL = 'mongodb+srv://razimov2005_db_user:DDkOZoR1HqczXzf0@cluster0.azwxcs6.mongodb.net/';
+const PORT = process.env.PORT || 5000
+const DB_URL = process.env.DB_URL
 
 app.use(express.json());
+app.use(cors()) // Разрешает запросы с фронтенда
 app.use('/api', router)
 
 async function startApp() {

@@ -1,19 +1,12 @@
-import Router from 'express';
-import PostController from './PostController.js';
+import { Router } from 'express';
+import SongController from './SongController.js'; // Виправлено імпорт
 
 const router = new Router();
 
-router.post('/posts', PostController.createPost);
-
-router.get('/posts', PostController.getAllPosts);
-
-// Отримання ОДНОГО поста за ID
-router.get('/posts/:id', PostController.getOne);
-
-// Оновлення поста
-router.put('/posts/:id', PostController.update);
-
-// Видалення поста
-router.delete('/posts/:id', PostController.delete);
+router.post('/songs', SongController.createSong);
+router.get('/songs', SongController.getAllSongs);
+router.get('/songs/:id', SongController.getOne);
+router.put('/songs/:id', SongController.update);
+router.delete('/songs/:id', SongController.delete);
 
 export default router;
