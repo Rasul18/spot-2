@@ -3,15 +3,29 @@ import SongG from "./Song.js";
 class SongController {
     async createSong(req, res) {
         try {
-            // ВИПРАВЛЕНО: Тепер ми чекаємо поля пісні, а не поста
-            const { name, desc, image, file, duration, album } = req.body;
-            
-            // Створюємо пісню
-            const song = await SongG.create({ name, desc, image, file, duration, album });
-            
+            // Добавь эти логи, чтобы увидеть всё в консоли VS Code
+            console.log("BODY:", req.body);
+            console.log("FILES:", req.files);
+
+            // Проверка: если файлы не дошли, не идем дальше
+            if (!req.files || !req.files.file || !req.files.image) {
+                return res.status(400).json({ message: "Файлы 'file' или 'image' не получены сервером" });
+            }
+
+            const { name, desc, duration, album } = req.body;
+            const audioFile = req.files.file[0].filename;
+            const imageFile = req.files.image[0].filename;
+
+            const song = await SongG.create({
+                name, desc, duration, album,
+                image: `/uploads/images/${imageFile}`,
+                file: `/uploads/music/${audioFile}`
+            });
+
             res.json(song);
         } catch (e) {
-            res.status(500).json(e);
+            console.log("ОШИБКА ТУТ:", e);
+            res.status(500).json({ message: "Ошибка на сервере", error: e.message });
         }
     }
 

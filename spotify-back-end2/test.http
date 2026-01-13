@@ -1,0 +1,30 @@
+POST http://localhost:5000/api/songs
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="name"
+
+Черные глаза
+--boundary
+Content-Disposition: form-data; name="desc"
+
+Описание
+--boundary
+Content-Disposition: form-data; name="album"
+
+Альбом
+--boundary
+Content-Disposition: form-data; name="duration"
+
+5:19
+--boundary
+Content-Disposition: form-data; name="file"; filename="song.mp3"
+Content-Type: audio/mpeg
+
+< C:/Users/razim/OneDrive/Документы/GitHub/spot-2/spotify-back-end2/uploads/music/song.mp3
+--boundary
+Content-Disposition: form-data; name="image"; filename="cover.jpg"
+Content-Type: image/jpeg
+
+< C:/Users/razim/OneDrive/Документы/GitHub/spot-2/spotify-back-end2/uploads/images/cover.jpg
+--boundary--

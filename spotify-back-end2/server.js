@@ -4,12 +4,16 @@ import cors from 'cors' //cors: Чтобы разрешить вашему фр�
 import router from './router.js'
 import 'dotenv/config' //dotenv: Чтобы прятать пароли от базы данных.
 
+
 const app = express()
 const PORT = process.env.PORT || 5000
 const DB_URL = process.env.DB_URL
 
-app.use(express.json());
 app.use(cors()) // Разрешает запросы с фронтенда
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use('/uploads', express.static('uploads'));
 app.use('/api', router)
 
 async function startApp() {
