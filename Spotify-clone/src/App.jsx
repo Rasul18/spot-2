@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import './index.css'
-import Player from "./components/player";
+import Player from "./components/Player";
 import Sidebar from "./components/Sidebar";
 import Display from "./components/Display";
 import { PlayerContext } from "./context/PlayerContext";
@@ -16,7 +16,7 @@ const App = () => {
         <Display />
       </div>
       <Player />
-      <audio ref={audioRef} src={track.file} preload='auto'></audio>
+      {track && <audio ref={audioRef} src={track.file} preload='auto'></audio>}
     </div>
   );
 }
