@@ -3,11 +3,19 @@ import SongController from './SongController.js';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = new Router();
+
+const ensureUploadsDirs = () => {
+    const musicDir = path.join(__dirname, 'uploads/music');
+    const imagesDir = path.join(__dirname, 'uploads/images');
+    fs.mkdirSync(musicDir, { recursive: true });
+    fs.mkdirSync(imagesDir, { recursive: true });
+};
 
 // Логирование перед multer
 router.use((req, res, next) => {
@@ -19,6 +27,7 @@ router.use((req, res, next) => {
 // Настройка хранилища: куда и под каким именем сохранять файлы
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+        ensureUploadsDirs();
         if (file.fieldname === "file") {
             cb(null, path.join(__dirname, 'uploads/music')); // Абсолютный путь
         } else {
