@@ -8,9 +8,9 @@ const Display = () => {
 
   const displayRef = useRef();
   const location = useLocation();
-  const isAlbum = location.pathname.includes('album');
-  const albumId = isAlbum ? location.pathname.slice(-1) : '';
-  const bgColor = albumsData[Number(albumId)].bgColor;
+  const isAlbum = location.pathname.toLowerCase().includes('/album');
+  const albumId = isAlbum ? Number(location.pathname.split('/').pop()) : null;
+  const bgColor = albumId !== null && albumsData[albumId] ? albumsData[albumId].bgColor : '#121212';
 
   useEffect(() => {
     if (isAlbum) {
@@ -25,8 +25,7 @@ const Display = () => {
     <div ref={displayRef} className='w-[100%] m-2 px-6 pt-4 rounded bg-[#121212] text-white overflow-auto lg:w-[75%] lg:ml-0'>
       <Routes>
         <Route path='/' element={<DisplayHome />} />
-        <Route path='/Album/:id' element={<DisplayAlbum />} />
-
+        <Route path='/album/:id' element={<DisplayAlbum />} />
       </Routes>
     </div>
   )

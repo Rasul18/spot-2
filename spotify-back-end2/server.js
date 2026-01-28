@@ -8,8 +8,11 @@ import 'dotenv/config' //dotenv: Чтобы прятать пароли от б�
 const app = express()
 const PORT = process.env.PORT || 5000
 const DB_URL = process.env.DB_URL
+const FRONTEND_URL = process.env.FRONTEND_URL
 
-app.use(cors()) // Разрешает запросы с фронтенда
+app.use(cors({
+    origin: FRONTEND_URL || '*'
+})) // Разрешает запросы с фронтенда
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

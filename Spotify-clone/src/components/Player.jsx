@@ -9,10 +9,10 @@ const Player = () => {
     return (
         <div className='h-[10%] bg-black text-white flex items-center justify-center px-4'>
             <div className='hidden lg:flex items-center gap-4'>
-                <img className='w-12' src={track.image} alt="" />
+                {track && <img className='w-12' src={track.image} alt="" />}
                 <div>
-                    <p>{track.name}</p>
-                    <p>{track.desc.slice(0, 12)}</p>
+                    <p>{track ? track.name : 'Loading...'}</p>
+                    <p>{track ? track.desc.slice(0, 12) : ''}</p>
                 </div>
             </div>
             <div className='flex flex-col items-center gap-2 m-auto'>

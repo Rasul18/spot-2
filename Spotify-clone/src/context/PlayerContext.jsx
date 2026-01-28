@@ -1,5 +1,5 @@
 import { createContext, useEffect, useRef, useState } from "react";
-import { songsData } from "../assets/assets";
+import API_URL from "../config/api";
 
 export const PlayerContext = createContext()
 
@@ -9,12 +9,38 @@ const PlayerContextProvider = (props) => {
     const seekBg = useRef();
     const seekBar = useRef();
 
-    const [track, setTrack] = useState(songsData[6]);
+    const [songsData, setSongsData] = useState([]);
+    const [track, setTrack] = useState(null);
     const [playStatus, setPlayStatus] = useState(false);
     const [time, setTime] = useState({
         currentTime: { second: 0, minute: 0 },
         totalTime: { second: 0, minute: 0 }
     });
+
+    const fetchSongs = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/songs`);
+            const songs = await response.json();
+            const formattedSongs = songs.map((song, index) => ({
+                id: index,
+                name: song.name,
+                image: `${API_URL}${song.image}`,
+                file: `${API_URL}${song.file}`,
+                desc: song.desc,
+                duration: song.duration
+            }));
+            setSongsData(formattedSongs);
+            if (formattedSongs.length > 0 && !track) {
+                setTrack(formattedSongs[0]);
+            }
+        } catch (error) {
+            console.error('Error fetching songs:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchSongs();
+    }, []);
 
     const play = () => {
         audioRef.current.play();
@@ -27,15 +53,17 @@ const PlayerContextProvider = (props) => {
     }
 
     const playWithId = async (id) => {
-        await setTrack(songsData[id]);
-        if (audioRef.current) {
-            audioRef.current.play();
-            setPlayStatus(true);
+        if (songsData[id]) {
+            await setTrack(songsData[id]);
+            if (audioRef.current) {
+                audioRef.current.play();
+                setPlayStatus(true);
+            }
         }
     }
 
     const previous = async () => {
-        if (track.id > 0) {
+        if (track && track.id > 0) {
             await setTrack(songsData[track.id - 1]);
             await audioRef.current.play();
             setPlayStatus(true);
@@ -43,7 +71,7 @@ const PlayerContextProvider = (props) => {
     }
 
     const next = async () => {
-        if (track.id < songsData.length - 1) {
+        if (track && track.id < songsData.length - 1) {
             await setTrack(songsData[track.id + 1]);
             await audioRef.current.play();
             setPlayStatus(true);
@@ -51,7 +79,7 @@ const PlayerContextProvider = (props) => {
     }
 
     const seekSong = (e) => {
-        audioRef.current.currentTime =((e.nativeEvent.offsetX / seekBg.current.clientWidth) * audioRef.current.duration) ;
+        audioRef.current.currentTime = ((e.nativeEvent.offsetX / seekBg.current.clientWidth) * audioRef.current.duration);
     }
 
     useEffect(() => {
@@ -87,7 +115,10 @@ const PlayerContextProvider = (props) => {
         pause,
         playWithId,
         previous,
-        next,seekSong 
+        next,
+        seekSong,
+        songsData,
+        fetchSongs
     }
 
     return (

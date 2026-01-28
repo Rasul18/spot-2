@@ -1,6 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
+import { PlayerContext } from '../context/PlayerContext'
+import API_URL from '../config/api'
 
 const AddSong = () => {
+    const { fetchSongs } = useContext(PlayerContext);
     const [formData, setFormData] = useState({
         name: '',
         desc: '',
@@ -48,18 +51,19 @@ const AddSong = () => {
         data.append('album', formData.album);
 
         try {
-            const response = await fetch('http://localhost:5000/api/songs', {
+            const response = await fetch(`${API_URL}/api/songs`, {
                 method: 'POST',
                 body: data  // НЕ устанавливаем Content-Type, браузер сам
             });
 
             const result = await response.json();
-
+node server.js
             if (response.ok) {
                 setMessage('✅ Песня успешно добавлена!');
                 setFormData({ name: '', desc: '', duration: '', album: '' });
                 setAudioFile(null);
                 setImageFile(null);
+                fetchSongs(); // Обновляем список песен
             } else {
                 setMessage(`❌ Ошибка: ${result.message}`);
             }
