@@ -57,7 +57,6 @@ const AddSong = () => {
             });
 
             const result = await response.json();
-node server.js
             if (response.ok) {
                 setMessage('✅ Песня успешно добавлена!');
                 setFormData({ name: '', desc: '', duration: '', album: '' });
