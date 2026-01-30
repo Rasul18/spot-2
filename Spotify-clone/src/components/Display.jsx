@@ -3,6 +3,8 @@ import { Route, Routes, useLocation } from 'react-router-dom'
 import DisplayHome from './DisplayHome'
 import DisplayAlbum from './DisplayAlbum'
 import DisplayPlaceholder from './DisplayPlaceholder'
+import Search from './Search'
+import Library from './Library'
 import { albumsData } from '../assets/assets'
 
 const Display = () => {
@@ -27,8 +29,8 @@ const Display = () => {
       <Routes>
         <Route path='/' element={<DisplayHome />} />
         <Route path='/album/:id' element={<DisplayAlbum />} />
-        <Route path='/search' element={<DisplayPlaceholder title='Search' subtitle='Search will appear here.' />} />
-        <Route path='/library' element={<DisplayPlaceholder title='Your Library' subtitle='Your saved playlists and podcasts will appear here.' />} />
+        <Route path='/search' element={<Search />} />
+        <Route path='/library' element={<Library />} />
         <Route path='/playlist/new' element={<DisplayPlaceholder title='Create Playlist' subtitle='Playlist creation will be added here.' />} />
         <Route path='/podcasts' element={<DisplayPlaceholder title='Podcasts' subtitle='Browse podcasts here.' />} />
       </Routes>
