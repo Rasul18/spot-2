@@ -5,6 +5,7 @@ import DisplayAlbum from './DisplayAlbum'
 import DisplayPlaceholder from './DisplayPlaceholder'
 import Search from './Search'
 import Library from './Library'
+import Playlists from './Playlists'
 import { albumsData } from '../assets/assets'
 
 const Display = () => {
@@ -31,7 +32,7 @@ const Display = () => {
         <Route path='/album/:id' element={<DisplayAlbum />} />
         <Route path='/search' element={<Search />} />
         <Route path='/library' element={<Library />} />
-        <Route path='/playlist/new' element={<DisplayPlaceholder title='Create Playlist' subtitle='Playlist creation will be added here.' />} />
+        <Route path='/playlist/new' element={<Playlists />} />
         <Route path='/podcasts' element={<DisplayPlaceholder title='Podcasts' subtitle='Browse podcasts here.' />} />
       </Routes>
     </div>
