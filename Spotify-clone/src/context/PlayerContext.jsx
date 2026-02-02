@@ -12,6 +12,8 @@ const PlayerContextProvider = (props) => {
     const [songsData, setSongsData] = useState([]);
     const [track, setTrack] = useState(null);
     const [playStatus, setPlayStatus] = useState(false);
+    const [shuffle, setShuffle] = useState(false);
+    const [loop, setLoop] = useState(false);
     const [time, setTime] = useState({
         currentTime: { second: 0, minute: 0 },
         totalTime: { second: 0, minute: 0 }
@@ -63,19 +65,41 @@ const PlayerContextProvider = (props) => {
     }
 
     const previous = async () => {
-        if (track && track.id > 0) {
-            await setTrack(songsData[track.id - 1]);
-            await audioRef.current.play();
-            setPlayStatus(true);
+        if (!track || songsData.length === 0) return;
+        let prevIndex = track.id - 1;
+        if (shuffle && songsData.length > 1) {
+            let rand = track.id;
+            while (rand === track.id) {
+                rand = Math.floor(Math.random() * songsData.length);
+            }
+            prevIndex = rand;
         }
+        if (prevIndex < 0) {
+            if (loop) prevIndex = songsData.length - 1;
+            else return;
+        }
+        await setTrack(songsData[prevIndex]);
+        await audioRef.current.play();
+        setPlayStatus(true);
     }
 
     const next = async () => {
-        if (track && track.id < songsData.length - 1) {
-            await setTrack(songsData[track.id + 1]);
-            await audioRef.current.play();
-            setPlayStatus(true);
+        if (!track || songsData.length === 0) return;
+        let nextIndex = track.id + 1;
+        if (shuffle && songsData.length > 1) {
+            let rand = track.id;
+            while (rand === track.id) {
+                rand = Math.floor(Math.random() * songsData.length);
+            }
+            nextIndex = rand;
         }
+        if (nextIndex >= songsData.length) {
+            if (loop) nextIndex = 0;
+            else return;
+        }
+        await setTrack(songsData[nextIndex]);
+        await audioRef.current.play();
+        setPlayStatus(true);
     }
 
     const seekSong = (e) => {
@@ -83,8 +107,10 @@ const PlayerContextProvider = (props) => {
     }
 
     useEffect(() => {
-        setTimeout(() => {
-            audioRef.current.ontimeupdate = () => {
+        if (!audioRef.current) return;
+        const audio = audioRef.current;
+        const timer = setTimeout(() => {
+            audio.ontimeupdate = () => {
                 // Двигаем ползунок: (текущее время / общая длина) * 100
                 // Используем Math.floor, чтобы получать целое число для процентов
                 seekBar.current.style.width = (Math.floor(audioRef.current.currentTime / audioRef.current.duration * 100)) + "%";
@@ -100,9 +126,28 @@ const PlayerContextProvider = (props) => {
                         minute: Math.floor(audioRef.current.duration / 60)
                     }
                 });
-            }
+            };
         }, 1000);
-    }, [audioRef]);
+
+        audio.onended = () => {
+            if (loop) {
+                audio.currentTime = 0;
+                audio.play();
+                setPlayStatus(true);
+            } else {
+                next();
+            }
+        };
+
+        return () => {
+            clearTimeout(timer);
+            audio.ontimeupdate = null;
+            audio.onended = null;
+        };
+    }, [audioRef, loop, shuffle, songsData, track]);
+
+    const toggleShuffle = () => setShuffle(prev => !prev);
+    const toggleLoop = () => setLoop(prev => !prev);
 
     const contextValue = {
         audioRef,
@@ -117,6 +162,10 @@ const PlayerContextProvider = (props) => {
         previous,
         next,
         seekSong,
+        shuffle,
+        loop,
+        toggleShuffle,
+        toggleLoop,
         songsData,
         fetchSongs
     }

@@ -4,7 +4,7 @@ import { PlayerContext } from '../context/PlayerContext';
 
 const Player = () => {
 
-    const { track, seekBar, seekBg, playStatus, play, pause, time, previous, next, seekSong } = useContext(PlayerContext);
+    const { track, seekBar, seekBg, playStatus, play, pause, time, previous, next, seekSong, shuffle, loop, toggleShuffle, toggleLoop } = useContext(PlayerContext);
 
     return (
         <div className='h-[10%] bg-black text-white flex items-center justify-center px-4'>
@@ -17,14 +17,14 @@ const Player = () => {
             </div>
             <div className='flex flex-col items-center gap-2 m-auto'>
                 <div className='flex gap-4'>
-                    <img className='w-4 cursor-pointer' src={assets.shuffle_icon} alt="" />
+                    <img onClick={toggleShuffle} className={`w-4 cursor-pointer ${shuffle ? 'opacity-100' : 'opacity-60'}`} src={assets.shuffle_icon} alt="" />
                     <img onClick={previous} className='w-4 cursor-pointer' src={assets.prev_icon} alt="" />
                     {playStatus
                         ? <img onClick={pause} className='w-4 cursor-pointer' src={assets.pause_icon} alt="" />
                         : <img onClick={play} className='w-4 cursor-pointer' src={assets.play_icon} alt="" />
                     }
                     <img onClick={next} className='w-4 cursor-pointer' src={assets.next_icon} alt="" />
-                    <img className='w-4 cursor-pointer' src={assets.loop_icon} alt="" />
+                    <img onClick={toggleLoop} className={`w-4 cursor-pointer ${loop ? 'opacity-100' : 'opacity-60'}`} src={assets.loop_icon} alt="" />
                 </div>
                 <div className='flex items-center gap-5'>
                     <p>{time.currentTime.minute}:{time.currentTime.second}</p>
