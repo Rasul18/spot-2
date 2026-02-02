@@ -45,22 +45,21 @@ const PlayerContextProvider = (props) => {
     }, []);
 
     const play = () => {
-        audioRef.current.play();
+        if (!audioRef.current) return;
+        audioRef.current.play().catch(() => {});
         setPlayStatus(true);
     }
 
     const pause = () => {
+        if (!audioRef.current) return;
         audioRef.current.pause();
         setPlayStatus(false); // ИСПРАВЛЕНО: было flase
     }
 
-    const playWithId = async (id) => {
+    const playWithId = (id) => {
         if (songsData[id]) {
-            await setTrack(songsData[id]);
-            if (audioRef.current) {
-                audioRef.current.play();
-                setPlayStatus(true);
-            }
+            setTrack(songsData[id]);
+            setPlayStatus(true);
         }
     }
 
@@ -78,8 +77,7 @@ const PlayerContextProvider = (props) => {
             if (loop) prevIndex = songsData.length - 1;
             else return;
         }
-        await setTrack(songsData[prevIndex]);
-        await audioRef.current.play();
+        setTrack(songsData[prevIndex]);
         setPlayStatus(true);
     }
 
@@ -97,14 +95,22 @@ const PlayerContextProvider = (props) => {
             if (loop) nextIndex = 0;
             else return;
         }
-        await setTrack(songsData[nextIndex]);
-        await audioRef.current.play();
+        setTrack(songsData[nextIndex]);
         setPlayStatus(true);
     }
 
     const seekSong = (e) => {
         audioRef.current.currentTime = ((e.nativeEvent.offsetX / seekBg.current.clientWidth) * audioRef.current.duration);
     }
+
+    useEffect(() => {
+        if (!audioRef.current || !track) return;
+        const audio = audioRef.current;
+        audio.src = track.file;
+        if (playStatus) {
+            audio.play().catch(() => {});
+        }
+    }, [track, playStatus]);
 
     useEffect(() => {
         if (!audioRef.current) return;
@@ -132,7 +138,7 @@ const PlayerContextProvider = (props) => {
         audio.onended = () => {
             if (loop) {
                 audio.currentTime = 0;
-                audio.play();
+                audio.play().catch(() => {});
                 setPlayStatus(true);
             } else {
                 next();
