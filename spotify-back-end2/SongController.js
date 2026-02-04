@@ -1,4 +1,12 @@
 import SongG from "./Song.js";
+import cloudinary from "cloudinary";
+import fs from "fs/promises";
+
+cloudinary.v2.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 class SongController {
     async createSong(req, res) {
@@ -13,13 +21,26 @@ class SongController {
             }
 
             const { name, desc, duration, album } = req.body;
-            const audioFile = req.files.file[0].filename;
-            const imageFile = req.files.image[0].filename;
+            const audioPath = req.files.file[0].path;
+            const imagePath = req.files.image[0].path;
+
+            const uploadedImage = await cloudinary.v2.uploader.upload(imagePath, {
+                folder: "spotify/images",
+                resource_type: "image"
+            });
+
+            const uploadedAudio = await cloudinary.v2.uploader.upload(audioPath, {
+                folder: "spotify/audio",
+                resource_type: "video"
+            });
+
+            await fs.unlink(imagePath);
+            await fs.unlink(audioPath);
 
             const song = await SongG.create({
                 name, desc, duration, album,
-                image: `/uploads/images/${imageFile}`,
-                file: `/uploads/music/${audioFile}`
+                image: uploadedImage.secure_url,
+                file: uploadedAudio.secure_url
             });
 
             res.json(song);

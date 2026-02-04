@@ -23,11 +23,16 @@ const PlayerContextProvider = (props) => {
         try {
             const response = await fetch(`${API_URL}/api/songs`);
             const songs = await response.json();
+            const toAbsolute = (value) => {
+                if (!value) return value;
+                return value.startsWith('http') ? value : `${API_URL}${value}`;
+            };
+
             const formattedSongs = songs.map((song, index) => ({
                 id: index,
                 name: song.name,
-                image: `${API_URL}${song.image}`,
-                file: `${API_URL}${song.file}`,
+                image: toAbsolute(song.image),
+                file: toAbsolute(song.file),
                 desc: song.desc,
                 duration: song.duration
             }));
