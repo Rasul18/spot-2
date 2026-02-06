@@ -184,9 +184,10 @@ const PlayerContextProvider = (props) => {
         toggleShuffle,
         toggleLoop,
         songsData,
-        fetchSongs
+        fetchSongs,
+        volume,
+        setVolume
     }
-
     return (
         <PlayerContext.Provider value={contextValue}>
             {props.children}
