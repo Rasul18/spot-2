@@ -10,6 +10,7 @@ const PlayerContextProvider = (props) => {
     const seekBar = useRef();
 
     const [songsData, setSongsData] = useState([]);
+    const [volume, setVolume] = useState(0.7);
     const [track, setTrack] = useState(null);
     const [playStatus, setPlayStatus] = useState(false);
     const [shuffle, setShuffle] = useState(false);
@@ -49,9 +50,13 @@ const PlayerContextProvider = (props) => {
         fetchSongs();
     }, []);
 
+    useEffect(() => {
+        if (audioRef.current) audioRef.current.volume = volume;
+    }, [volume]);
+
     const play = () => {
         if (!audioRef.current) return;
-        audioRef.current.play().catch(() => {});
+        audioRef.current.play().catch(() => { });
         setPlayStatus(true);
     }
 
@@ -112,10 +117,11 @@ const PlayerContextProvider = (props) => {
         if (!audioRef.current || !track) return;
         const audio = audioRef.current;
         audio.src = track.file;
+        audio.volume = volume;
         if (playStatus) {
-            audio.play().catch(() => {});
+            audio.play().catch(() => { });
         }
-    }, [track, playStatus]);
+    }, [track, playStatus, volume]);
 
     useEffect(() => {
         if (!audioRef.current) return;
@@ -143,7 +149,7 @@ const PlayerContextProvider = (props) => {
         audio.onended = () => {
             if (loop) {
                 audio.currentTime = 0;
-                audio.play().catch(() => {});
+                audio.play().catch(() => { });
                 setPlayStatus(true);
             } else {
                 next();
