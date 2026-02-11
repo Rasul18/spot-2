@@ -117,11 +117,10 @@ const PlayerContextProvider = (props) => {
         if (!audioRef.current || !track) return;
         const audio = audioRef.current;
         audio.src = track.file;
-        audio.volume = volume;
         if (playStatus) {
             audio.play().catch(() => { });
         }
-    }, [track, playStatus, volume]);
+    }, [track, playStatus]);
 
     useEffect(() => {
         if (!audioRef.current) return;
