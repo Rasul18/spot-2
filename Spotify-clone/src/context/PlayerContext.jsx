@@ -113,6 +113,13 @@ const PlayerContextProvider = (props) => {
         audioRef.current.currentTime = ((e.nativeEvent.offsetX / seekBg.current.clientWidth) * audioRef.current.duration);
     }
 
+    const formatTime = (seconds) => {
+        if (!Number.isFinite(seconds) || seconds < 0) return { minute: 0, second: "00" };
+        const minute = Math.floor(seconds / 60);
+        const second = String(Math.floor(seconds % 60)).padStart(2, "0");
+        return { minute, second };
+    };
+
     useEffect(() => {
         if (!audioRef.current || !track) return;
         const audio = audioRef.current;
@@ -127,20 +134,25 @@ const PlayerContextProvider = (props) => {
         const audio = audioRef.current;
         const timer = setTimeout(() => {
             audio.ontimeupdate = () => {
+                const duration = audioRef.current.duration;
+                const currentTime = audioRef.current.currentTime;
+                const progress = Number.isFinite(duration) && duration > 0
+                    ? (currentTime / duration) * 100
+                    : 0;
+
+                seekBar.current.style.width = `${Math.floor(progress)}%`;
+
                 // Двигаем ползунок: (текущее время / общая длина) * 100
                 // Используем Math.floor, чтобы получать целое число для процентов
                 seekBar.current.style.width = (Math.floor(audioRef.current.currentTime / audioRef.current.duration * 100)) + "%";
 
                 // Обновляем состояние времени
+                const current = formatTime(audioRef.current.currentTime);
+                const total = formatTime(audioRef.current.duration);
+
                 setTime({
-                    currentTime: {
-                        second: Math.floor(audioRef.current.currentTime % 60),
-                        minute: Math.floor(audioRef.current.currentTime / 60)
-                    },
-                    totalTime: {
-                        second: Math.floor(audioRef.current.duration % 60),
-                        minute: Math.floor(audioRef.current.duration / 60)
-                    }
+                    currentTime: current,
+                    totalTime: total
                 });
             };
         }, 1000);
