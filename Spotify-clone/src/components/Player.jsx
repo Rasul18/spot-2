@@ -1,10 +1,19 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { assets, } from '../assets/assets'
 import { PlayerContext } from '../context/PlayerContext';
 
 const Player = () => {
 
     const { track, seekBar, seekBg, playStatus, play, pause, time, previous, next, seekSong, shuffle, loop, toggleShuffle, toggleLoop, volume, setVolume } = useContext(PlayerContext);
+    const [pendingVolume, setPendingVolume] = useState(volume);
+
+    useEffect(() => {
+        setPendingVolume(volume);
+    }, [volume]);
+
+    const applyVolume = () => {
+        setVolume(pendingVolume);
+    };
 
     return (
         <div className='h-[10%] bg-black text-white flex items-center justify-center px-4'>
@@ -45,8 +54,11 @@ const Player = () => {
                     min="0"
                     max="1"
                     step="0.01"
-                    value={volume}
-                    onChange={(e) => setVolume(Number(e.target.value))}
+                    value={pendingVolume}
+                    onChange={(e) => setPendingVolume(Number(e.target.value))}
+                    onMouseUp={applyVolume}
+                    onTouchEnd={applyVolume}
+                    onBlur={applyVolume}
                     className='w-20'
                 />
                 <img className='w-4' src={assets.mini_player_icon} alt="" />
