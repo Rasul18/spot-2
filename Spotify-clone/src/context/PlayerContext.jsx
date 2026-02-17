@@ -30,6 +30,7 @@ const PlayerContextProvider = (props) => {
             };
 
             const formattedSongs = songs.map((song, index) => ({
+                genre: song.genre || "Pop",
                 id: index,
                 name: song.name,
                 image: toAbsolute(song.image),
@@ -142,10 +143,6 @@ const PlayerContextProvider = (props) => {
 
                 seekBar.current.style.width = `${Math.floor(progress)}%`;
 
-                // Двигаем ползунок: (текущее время / общая длина) * 100
-                // Используем Math.floor, чтобы получать целое число для процентов
-                seekBar.current.style.width = (Math.floor(audioRef.current.currentTime / audioRef.current.duration * 100)) + "%";
-
                 // Обновляем состояние времени
                 const current = formatTime(audioRef.current.currentTime);
                 const total = formatTime(audioRef.current.duration);
@@ -207,3 +204,4 @@ const PlayerContextProvider = (props) => {
 }
 
 export default PlayerContextProvider;
+

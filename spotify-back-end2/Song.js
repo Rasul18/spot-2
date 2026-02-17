@@ -6,7 +6,8 @@ const songSchema = new mongoose.Schema({
     image: { type: String, required: true }, // Тут буде посилання на картинку
     file: { type: String, required: true },  // Тут буде посилання на MP3 файл
     duration: { type: String, required: true },
-    album: { type: String, default: "Single" }
+    album: { type: String, default: "Single" },
+    genre: { type: String, default: "Pop" }
 })
 
 // Створюємо модель 'Song'

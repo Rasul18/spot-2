@@ -20,7 +20,7 @@ class SongController {
                 return res.status(400).json({ message: "Файлы 'file' или 'image' не получены сервером" });
             }
 
-            const { name, desc, duration, album } = req.body;
+            const { name, desc, duration, album, genre } = req.body;
             const audioPath = req.files.file[0].path;
             const imagePath = req.files.image[0].path;
 
@@ -38,7 +38,11 @@ class SongController {
             await fs.unlink(audioPath);
 
             const song = await SongG.create({
-                name, desc, duration, album,
+                name,
+                desc,
+                duration,
+                album,
+                genre: genre || "Pop",
                 image: uploadedImage.secure_url,
                 file: uploadedAudio.secure_url
             });

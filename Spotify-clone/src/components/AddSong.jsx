@@ -1,78 +1,81 @@
 import React, { useState, useContext } from 'react'
 import { PlayerContext } from '../context/PlayerContext'
 import API_URL from '../config/api'
+import GENRES from './genres.js'
 
 const AddSong = () => {
-    const { fetchSongs } = useContext(PlayerContext);
+    const { fetchSongs } = useContext(PlayerContext)
     const [formData, setFormData] = useState({
         name: '',
         desc: '',
         duration: '',
-        album: ''
-    });
-    const [audioFile, setAudioFile] = useState(null);
-    const [imageFile, setImageFile] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
+        album: '',
+        genre: GENRES[0]
+    })
+    const [audioFile, setAudioFile] = useState(null)
+    const [imageFile, setImageFile] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [message, setMessage] = useState('')
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
+        const { name, value } = e.target
+        setFormData((prev) => ({
             ...prev,
             [name]: value
-        }));
-    };
+        }))
+    }
 
     const handleAudioChange = (e) => {
-        setAudioFile(e.target.files[0]);
-    };
+        setAudioFile(e.target.files[0])
+    }
 
     const handleImageChange = (e) => {
-        setImageFile(e.target.files[0]);
-    };
+        setImageFile(e.target.files[0])
+    }
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        e.preventDefault()
 
         if (!audioFile || !imageFile) {
-            setMessage('Пожалуйста выберите файл и изображение');
-            return;
+            setMessage('Пожалуйста выберите файл и изображение')
+            return
         }
 
-        setLoading(true);
-        setMessage('');
+        setLoading(true)
+        setMessage('')
 
-        const data = new FormData();
-        data.append('file', audioFile);        // ТОЧНО 'file'
-        data.append('image', imageFile);       // ТОЧНО 'image'
-        data.append('name', formData.name);
-        data.append('desc', formData.desc);
-        data.append('duration', formData.duration);
-        data.append('album', formData.album);
+        const data = new FormData()
+        data.append('file', audioFile)
+        data.append('image', imageFile)
+        data.append('name', formData.name)
+        data.append('desc', formData.desc)
+        data.append('duration', formData.duration)
+        data.append('album', formData.album)
+        data.append('genre', formData.genre)
 
         try {
             const response = await fetch(`${API_URL}/api/songs`, {
                 method: 'POST',
-                body: data  // НЕ устанавливаем Content-Type, браузер сам
-            });
+                body: data
+            })
 
-            const result = await response.json();
+            const result = await response.json()
             if (response.ok) {
-                setMessage('✅ Песня успешно добавлена!');
-                setFormData({ name: '', desc: '', duration: '', album: '' });
-                setAudioFile(null);
-                setImageFile(null);
-                fetchSongs(); // Обновляем список песен
+                setMessage('✅ Песня успешно добавлена!')
+                setFormData({ name: '', desc: '', duration: '', album: '', genre: GENRES[0] })
+                setAudioFile(null)
+                setImageFile(null)
+                fetchSongs()
             } else {
-                setMessage(`❌ Ошибка: ${result.message}`);
+                setMessage(`❌ Ошибка: ${result.message}`)
             }
         } catch (error) {
-            setMessage(`❌ Ошибка: ${error.message}`);
-            console.error('Ошибка:', error);
+            setMessage(`❌ Ошибка: ${error.message}`)
+            console.error('Ошибка:', error)
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     return (
         <div className='p-6 bg-[#242424] rounded text-white'>
@@ -119,6 +122,19 @@ const AddSong = () => {
                     className='p-2 rounded bg-[#333333] text-white'
                 />
 
+                <select
+                    name="genre"
+                    value={formData.genre}
+                    onChange={handleInputChange}
+                    className='p-2 rounded bg-[#333333] text-white'
+                >
+                    {GENRES.map((genre) => (
+                        <option key={genre} value={genre}>
+                            {genre}
+                        </option>
+                    ))}
+                </select>
+
                 <div>
                     <label className='block mb-2'>Аудиофайл (MP3)</label>
                     <input
@@ -158,7 +174,7 @@ const AddSong = () => {
                 </p>
             )}
         </div>
-    );
-};
+    )
+}
 
-export default AddSong;
+export default AddSong
