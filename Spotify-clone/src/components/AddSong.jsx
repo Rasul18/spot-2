@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react'
 import { PlayerContext } from '../context/PlayerContext'
 import API_URL from '../config/api'
 import GENRES from './genres.js'
+import jsmediatags from 'jsmediatags/dist/jsmediatags.min.js'
 
 const AddSong = () => {
     const { fetchSongs } = useContext(PlayerContext)
@@ -25,9 +26,58 @@ const AddSong = () => {
         }))
     }
 
-    const handleAudioChange = (e) => {
-        setAudioFile(e.target.files[0])
+    const getDurationInSec = (file) =>
+        new Promise((resolve) => {
+            const audio = new Audio(URL.createObjectURL(file))
+            audio.onloadedmetadata = () => {
+                resolve(Math.floor(audio.duration || 0))
+                URL.revokeObjectURL(audio.src)
+            }
+            audio.onerror = () => resolve(0)
+        })
+
+    const extractCoverFile = (picture) => {
+        if (!picture) return null
+        const byteArray = new Uint8Array(picture.data)
+        const blob = new Blob([byteArray], { type: picture.format || 'image/jpeg' })
+        return new File([blob], 'cover.jpg', { type: blob.type })
     }
+
+
+    const handleAudioChange = async (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setAudioFile(file)
+
+        const durationSec = await getDurationInSec(file)
+
+        jsmediatags.read(file, {
+            onSuccess: ({ tags }) => {
+                const autoTitle = tags.title || file.name.replace(/\.[^/.]+$/, '')
+                const cover = extractCoverFile(tags.picture)
+
+                setFormData((prev) => ({
+                    ...prev,
+                    name: prev.name || autoTitle,
+                    duration: prev.duration || String(durationSec)
+                }))
+
+                if (cover && !imageFile) {
+                    setImageFile(cover)
+                }
+            },
+            onError: () => {
+                const autoTitle = file.name.replace(/\.[^/.]+$/, '')
+                setFormData((prev) => ({
+                    ...prev,
+                    name: prev.name || autoTitle,
+                    duration: prev.duration || String(durationSec)
+                }))
+            }
+        })
+    }
+
 
     const handleImageChange = (e) => {
         setImageFile(e.target.files[0])
