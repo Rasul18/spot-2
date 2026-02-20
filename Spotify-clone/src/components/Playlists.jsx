@@ -120,12 +120,18 @@ const Playlists = () => {
                 {playlists.map((p) => (
                   <div
                     key={p.id}
-                    className={`flex items-center justify-between p-2 rounded cursor-pointer ${
-                      activeId === p.id ? 'bg-[#2a2a2a]' : 'bg-[#1f1f1f]'
-                    }`}
+                    className={`flex items-center justify-between p-2 rounded cursor-pointer ${activeId === p.id ? 'bg-[#2a2a2a]' : 'bg-[#1f1f1f]'
+                      }`}
                   >
-                    <span onClick={() => setActiveId(p.id)}>{p.name}</span>
                     <button
+                      type="button"
+                      onClick={() => setActiveId(p.id)}
+                      className='flex-1 text-left text-white'
+                    >
+                      {p.name}
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => removePlaylist(p.id)}
                       className='text-xs text-[#b3b3b3] hover:text-white'
                     >
@@ -133,6 +139,7 @@ const Playlists = () => {
                     </button>
                   </div>
                 ))}
+
               </div>
             )}
           </div>
