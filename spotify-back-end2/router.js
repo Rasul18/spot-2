@@ -17,37 +17,48 @@ const ensureUploadsDirs = () => {
     fs.mkdirSync(imagesDir, { recursive: true });
 };
 
-// Логирование перед multer
 router.use((req, res, next) => {
     console.log('🔍 Запрос:', req.method, req.path);
     console.log('📋 Content-Type:', req.get('content-type'));
     next();
 });
 
-// Настройка хранилища: куда и под каким именем сохранять файлы
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         ensureUploadsDirs();
-        if (file.fieldname === "file") {
-            cb(null, path.join(__dirname, 'uploads/music')); // Абсолютный путь
+        if (file.fieldname === 'file') {
+            cb(null, path.join(__dirname, 'uploads/music'));
         } else {
-            cb(null, path.join(__dirname, 'uploads/images')); // Абсолютный путь
+            cb(null, path.join(__dirname, 'uploads/images'));
         }
     },
     filename: (req, file, cb) => {
-        // Сохраняем как: ТЕКУЩАЯ_ДАТА + расширение оригинала
         cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
-const upload = multer({ 
+const upload = multer({
     storage,
-    limits: {
-        fileSize: 50 * 1024 * 1024 // 50MB
+    limits: { fileSize: 50 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        if (file.fieldname === 'file') {
+            const ok = [
+                'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav',
+                'audio/ogg', 'audio/mp4', 'video/mp4', 'audio/x-m4a'
+            ].includes(file.mimetype);
+            return ok ? cb(null, true) : cb(new Error('Неподдерживаемый аудиоформат'));
+        }
+
+        if (file.fieldname === 'image') {
+            return file.mimetype.startsWith('image/')
+                ? cb(null, true)
+                : cb(new Error('Файл обложки должен быть изображением'));
+        }
+
+        cb(new Error('Неизвестное поле файла'));
     }
 });
 
-// Логирование ПОСЛЕ multer
 router.post('/songs', (req, res, next) => {
     upload.fields([
         { name: 'file', maxCount: 1 },
@@ -57,9 +68,6 @@ router.post('/songs', (req, res, next) => {
             console.error('❌ ОШИБКА MULTER:', err.message);
             return res.status(400).json({ message: `Ошибка multer: ${err.message}` });
         }
-        console.log('✅ MULTER ОТРАБОТАЛ');
-        console.log('FILES ПОСЛЕ MULTER:', req.files);
-        console.log('BODY ПОСЛЕ MULTER:', req.body);
         next();
     });
 }, SongController.createSong);

@@ -189,7 +189,8 @@ const AddSong = () => {
                     <label className='block mb-2'>Аудиофайл (MP3)</label>
                     <input
                         type="file"
-                        accept="audio/*"
+                        accept="audio/*,.mp3,.m4a,.wav,.ogg,.mp4,video/mp4"
+
                         onChange={handleAudioChange}
                         required
                         className='p-2 rounded bg-[#333333] w-full'
