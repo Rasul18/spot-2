@@ -7,6 +7,7 @@ import Search from './Search'
 import Library from './Library'
 import Playlists from './Playlists'
 import Podcasts from './Podcasts'
+import LoginForm from './LoginForm'
 import { albumsData } from '../assets/assets'
 
 const Display = () => {
@@ -35,6 +36,7 @@ const Display = () => {
         <Route path='/library' element={<Library />} />
         <Route path='/playlist/new' element={<Playlists />} />
         <Route path='/podcasts' element={<Podcasts />} />
+        <Route path='/login' element={<LoginForm />} />
       </Routes>
     </div>
   )

@@ -109,7 +109,11 @@ const AddSong = () => {
                 body: data
             })
 
-            const result = await response.json()
+            const contentType = response.headers.get('content-type') || ''
+            const result = contentType.includes('application/json')
+                ? await response.json()
+                : { message: await response.text() }
+
             if (response.ok) {
                 setMessage('✅ Песня успешно добавлена!')
                 setFormData({ name: '', desc: '', duration: '', album: '', genre: GENRES[0] })
@@ -117,7 +121,10 @@ const AddSong = () => {
                 setImageFile(null)
                 fetchSongs()
             } else {
-                setMessage(`❌ Ошибка: ${result.message}`)
+                const message = response.status === 413
+                    ? 'Файл слишком большой. Максимальный размер: 200 MB'
+                    : result.message || 'Не удалось загрузить песню'
+                setMessage(`❌ Ошибка: ${message}`)
             }
         } catch (error) {
             setMessage(`❌ Ошибка: ${error.message}`)
