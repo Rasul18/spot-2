@@ -2,6 +2,7 @@ import express from 'express'
 import mongoose from 'mongoose'
 import cors from 'cors' //cors: Чтобы разрешить вашему фронтенду (localhost:5173) брать данные с бэкенда (localhost:4000).
 import router from './router.js'
+import User from './User.js'
 import 'dotenv/config' //dotenv: Чтобы прятать пароли от базы данных.
 
 
@@ -16,9 +17,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 app.use('/api', router)
 
+async function syncUserIndexes() {
+    try {
+        await User.syncIndexes();
+        console.log('User indexes synced');
+    } catch (e) {
+        console.log('User index sync skipped:', e.message);
+    }
+}
+
 async function startApp() {
     try {
         await mongoose.connect(DB_URL)
+        await syncUserIndexes()
         app.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
         });

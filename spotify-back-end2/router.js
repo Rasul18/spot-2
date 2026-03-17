@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import SongController from './SongController.js';
+import AuthController from './AuthController.js';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -39,7 +40,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
-    limits: { fileSize: 50 * 1024 * 1024 },
+    limits: { fileSize: 200 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         if (file.fieldname === 'file') {
             const ok = [
@@ -59,6 +60,10 @@ const upload = multer({
     }
 });
 
+router.post('/register', AuthController.register);
+router.post('/login', AuthController.login);
+router.get('/me', AuthController.me);
+
 router.post('/songs', (req, res, next) => {
     upload.fields([
         { name: 'file', maxCount: 1 },
@@ -66,6 +71,9 @@ router.post('/songs', (req, res, next) => {
     ])(req, res, (err) => {
         if (err) {
             console.error('❌ ОШИБКА MULTER:', err.message);
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(413).json({ message: 'Файл слишком большой. Максимальный размер: 200 MB' });
+            }
             return res.status(400).json({ message: `Ошибка multer: ${err.message}` });
         }
         next();

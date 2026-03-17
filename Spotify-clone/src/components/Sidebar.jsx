@@ -5,6 +5,13 @@ import { useNavigate } from 'react-router-dom'
 const Sidebar = () => {
 
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+    };
 
   return (
     <div className='w-[25%] h-full p-2 flex-col gap-2 text-white hidden lg:flex'>
@@ -38,6 +45,24 @@ const Sidebar = () => {
                 <h1>Lets`s findsome podcasts to follow </h1>
                 <p className='font-light'>we`ll keep you update on new episodes</p>
                 <button onClick={() => navigate('/podcasts')} className='px-4 py-1.5 bg-white text-[15px] text-black rounded-full mt-4'>Browse podcasts</button>
+            </div>
+            <div className='p-4 m-2 mt-4 border border-[#2f2f2f] rounded'>
+                {user ? (
+                    <>
+                        <p className='text-sm text-gray-400'>Вы вошли как</p>
+                        <p className='font-semibold mt-1'>{user.login}</p>
+                        <button onClick={handleLogout} className='px-4 py-1.5 bg-white text-[15px] text-black rounded-full mt-4'>
+                            Выйти
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <p className='text-sm text-gray-400'>Аккаунт не выбран</p>
+                        <button onClick={() => navigate('/login')} className='px-4 py-1.5 bg-white text-[15px] text-black rounded-full mt-4'>
+                            Войти или зарегистрироваться
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     </div>
