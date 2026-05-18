@@ -5,7 +5,6 @@ const userSchema = new mongoose.Schema(
         login: {
             type: String,
             required: true,
-            unique: true,
             trim: true,
             minlength: 3
         },
@@ -15,6 +14,16 @@ const userSchema = new mongoose.Schema(
         }
     },
     { timestamps: true }
+);
+
+userSchema.index(
+    { login: 1 },
+    {
+        unique: true,
+        partialFilterExpression: {
+            login: { $type: "string" }
+        }
+    }
 );
 
 export default mongoose.model("User", userSchema);

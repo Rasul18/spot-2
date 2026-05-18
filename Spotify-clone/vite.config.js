@@ -6,9 +6,17 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss(),],
   server: {
-    allowedHosts: [
-      'rasulhub.fun', // Добавляем твой домен сюда
-      'all'           // Либо можно написать 'all', чтобы разрешить любые хосты (для разработки)
-    ]
+    host: '0.0.0.0',
+    allowedHosts: true,
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true
+      },
+      '/uploads': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true
+      }
+    }
   }
 })

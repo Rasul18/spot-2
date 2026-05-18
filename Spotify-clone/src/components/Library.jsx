@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { PlayerContext } from '../context/PlayerContext'
+import { PlayerContext } from '../context/player-context'
 import SongItem from './SongItem'
 
 const Library = () => {

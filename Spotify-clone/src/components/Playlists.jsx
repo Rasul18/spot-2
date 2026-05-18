@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react'
-import { PlayerContext } from '../context/PlayerContext'
+import { PlayerContext } from '../context/player-context'
 import SongItem from './SongItem'
 
 const STORAGE_KEY = 'playlists'

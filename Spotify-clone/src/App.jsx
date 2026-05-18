@@ -3,7 +3,7 @@ import './index.css'
 import Player from "./components/Player";
 import Sidebar from "./components/Sidebar";
 import Display from "./components/Display";
-import { PlayerContext } from "./context/PlayerContext";
+import { PlayerContext } from "./context/player-context";
 
 const App = () => {
 

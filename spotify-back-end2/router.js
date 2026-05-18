@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import SongController from './SongController.js';
 import AuthController from './AuthController.js';
+import RecommendationController from './RecommendationController.js';
+import authMiddleware from './authMiddleware.js';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -18,11 +20,16 @@ const ensureUploadsDirs = () => {
     fs.mkdirSync(imagesDir, { recursive: true });
 };
 
-router.use((req, res, next) => {
-    console.log('🔍 Запрос:', req.method, req.path);
-    console.log('📋 Content-Type:', req.get('content-type'));
-    next();
-});
+if (process.env.NODE_ENV !== 'production') {
+    router.use((req, res, next) => {
+        console.log('Request:', req.method, req.path);
+        const contentType = req.get('content-type');
+        if (contentType) {
+            console.log('Content-Type:', contentType);
+        }
+        next();
+    });
+}
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -62,7 +69,7 @@ const upload = multer({
 
 router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
-router.get('/me', AuthController.me);
+router.get('/me', authMiddleware, AuthController.me);
 
 router.post('/songs', (req, res, next) => {
     upload.fields([
@@ -84,5 +91,10 @@ router.get('/songs', SongController.getAllSongs);
 router.get('/songs/:id', SongController.getOne);
 router.put('/songs/:id', SongController.update);
 router.delete('/songs/:id', SongController.delete);
+
+router.post('/interactions/play', authMiddleware, RecommendationController.registerPlay);
+router.post('/interactions/full-listen', authMiddleware, RecommendationController.registerFullListen);
+router.post('/interactions/like', authMiddleware, RecommendationController.setLike);
+router.get('/recommendations', authMiddleware, RecommendationController.getRecommendations);
 
 export default router;

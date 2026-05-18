@@ -1,15 +1,17 @@
 import React from 'react'
 import {assets} from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
+import { readStoredJson } from '../utils/storage'
 
 const Sidebar = () => {
 
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const user = readStoredJson('user');
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        window.dispatchEvent(new Event('auth-changed'));
         navigate('/login');
     };
 

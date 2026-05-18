@@ -1,10 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { assets, } from '../assets/assets'
-import { PlayerContext } from '../context/PlayerContext';
+import { PlayerContext } from '../context/player-context';
 
 const Player = () => {
 
-    const { track, seekBar, seekBg, playStatus, play, pause, time, previous, next, seekSong, shuffle, loop, toggleShuffle, toggleLoop, volume, setVolume } = useContext(PlayerContext);
+    const { track, seekBar, seekBg, playStatus, play, pause, time, previous, next, seekSong, shuffle, loop, toggleShuffle, toggleLoop, volume, setVolume, isTrackLiked, toggleLikeTrack } = useContext(PlayerContext);
     const [pendingVolume, setPendingVolume] = useState(volume);
 
     useEffect(() => {
@@ -23,6 +23,15 @@ const Player = () => {
                     <p>{track ? track.name : 'Loading...'}</p>
                     <p>{track ? track.desc.slice(0, 12) : ''}</p>
                 </div>
+                {track && (
+                    <button
+                        type='button'
+                        onClick={toggleLikeTrack}
+                        className={`rounded-full border px-3 py-1 text-xs ${isTrackLiked ? 'border-green-500 text-green-400' : 'border-[#3a3a3a] text-[#b3b3b3]'}`}
+                    >
+                        {isTrackLiked ? 'Лайк поставлен' : 'Лайк'}
+                    </button>
+                )}
             </div>
             <div className='flex flex-col items-center gap-2 m-auto'>
                 <div className='flex gap-4'>

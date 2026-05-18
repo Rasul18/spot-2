@@ -1,6 +1,6 @@
 import SongG from "./Song.js";
 import cloudinary from "cloudinary";
-import fs from "fs/promises";
+import { fetchJamendoSongs } from "./jamendoService.js";
 
 cloudinary.v2.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -8,12 +8,21 @@ cloudinary.v2.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+async function uploadToCloudinary(localPath, options) {
+    try {
+        return await cloudinary.v2.uploader.upload(localPath, options);
+    } catch (error) {
+        console.error("CLOUDINARY UPLOAD ERROR:", error.message);
+        return null;
+    }
+}
+
 class SongController {
     async createSong(req, res) {
         try {
-            // Добавь эти логи, чтобы увидеть всё в консоли VS Code
-            console.log("BODY:", req.body);
-            console.log("FILES:", req.files);
+            if (process.env.NODE_ENV !== "production") {
+                console.log("Upload payload received");
+            }
 
             // Проверка: если файлы не дошли, не идем дальше
             if (!req.files || !req.files.file || !req.files.image) {
@@ -23,19 +32,18 @@ class SongController {
             const { name, desc, duration, album, genre } = req.body;
             const audioPath = req.files.file[0].path;
             const imagePath = req.files.image[0].path;
+            const localImagePath = `/uploads/images/${req.files.image[0].filename}`;
+            const localAudioPath = `/uploads/music/${req.files.file[0].filename}`;
 
-            const uploadedImage = await cloudinary.v2.uploader.upload(imagePath, {
+            const uploadedImage = await uploadToCloudinary(imagePath, {
                 folder: "spotify/images",
                 resource_type: "image"
             });
 
-            const uploadedAudio = await cloudinary.v2.uploader.upload(audioPath, {
+            const uploadedAudio = await uploadToCloudinary(audioPath, {
                 folder: "spotify/audio",
                 resource_type: "video"
             });
-
-            await fs.unlink(imagePath);
-            await fs.unlink(audioPath);
 
             const song = await SongG.create({
                 name,
@@ -43,23 +51,45 @@ class SongController {
                 duration,
                 album,
                 genre: genre || "Pop",
-                image: uploadedImage.secure_url,
-                file: uploadedAudio.secure_url
+                image: uploadedImage?.secure_url || localImagePath,
+                file: uploadedAudio?.secure_url || localAudioPath
             });
 
             res.json(song);
         } catch (e) {
-            console.log("ОШИБКА ТУТ:", e);
+            console.error("CREATE SONG ERROR:", e);
             res.status(500).json({ message: "Ошибка на сервере", error: e.message });
         }
     }
 
     async getAllSongs(req, res) {
         try {
-            const songs = await SongG.find();
-            return res.json(songs); // ВИПРАВЛЕНО: повертаємо songs, а не posts
+            const source = String(req.query.source || "all").toLowerCase();
+            const offset = Number(req.query.offset || 0);
+            const limit = Number(req.query.limit || process.env.JAMENDO_LIMIT || 30);
+
+            if (source === "jamendo") {
+                const jamendoResult = await fetchJamendoSongs({ offset, limit });
+                return res.json(jamendoResult);
+            }
+
+            const [localSongs, jamendoResult] = await Promise.all([
+                SongG.find().lean(),
+                fetchJamendoSongs({ offset: 0, limit })
+            ]);
+
+            const songs = [
+                ...localSongs.map((song) => ({
+                    ...song,
+                    source: "local"
+                })),
+                ...jamendoResult.songs
+            ];
+
+            return res.json(songs);
         } catch (e) {
-            res.status(500).json(e);
+            console.error("GET SONGS ERROR:", e.message);
+            return res.status(500).json({ message: "Ошибка получения песен" });
         }
     }
 
@@ -69,24 +99,32 @@ class SongController {
             if (!id) {
                 return res.status(400).json({ message: 'ID не вказано' });
             }
-            const song = await SongG.findById(id);
+            const song = await SongG.findById(id).lean();
+            if (!song) {
+                return res.status(404).json({ message: 'Песня не найдена' });
+            }
             return res.json(song);
         } catch (e) {
-            res.status(500).json(e);
+            return res.status(500).json({ message: "Ошибка получения песни" });
         }
     }
 
     async update(req, res) {
         try {
-            const song = req.body;
-            // ВИПРАВЛЕНО: перевіряємо song._id
-            if (!song._id) {
+            const { id } = req.params;
+            if (!id) {
                 return res.status(400).json({ message: 'ID не вказано' });
             }
-            const updatedSong = await SongG.findByIdAndUpdate(song._id, song, { new: true });
+            const updatedSong = await SongG.findByIdAndUpdate(id, req.body, {
+                new: true,
+                runValidators: true
+            }).lean();
+            if (!updatedSong) {
+                return res.status(404).json({ message: 'Песня не найдена' });
+            }
             return res.json(updatedSong);
         } catch (e) {
-            res.status(500).json(e);
+            return res.status(500).json({ message: "Ошибка обновления песни" });
         }
     }
 
@@ -97,9 +135,12 @@ class SongController {
                 return res.status(400).json({ message: 'ID не вказано' });
             }
             const song = await SongG.findByIdAndDelete(id);
+            if (!song) {
+                return res.status(404).json({ message: 'Песня не найдена' });
+            }
             return res.json(song);
         } catch (e) {
-            res.status(500).json(e);
+            return res.status(500).json({ message: "Ошибка удаления песни" });
         }
     }
 }

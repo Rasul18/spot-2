@@ -1,7 +1,14 @@
-import { createContext, useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import API_URL from "../config/api";
+import { PlayerContext } from "./player-context";
+import { readStoredValue, removeStoredValue, writeStoredValue } from "../utils/storage";
 
-export const PlayerContext = createContext()
+const PLAYER_TRACK_KEY = 'player-track-id';
+const PLAYER_LOOP_KEY = 'player-loop-enabled';
+const PLAYER_SHUFFLE_KEY = 'player-shuffle-enabled';
+let songsCache = null;
+let songsRequestPromise = null;
+const JAMENDO_PAGE_SIZE = 12;
 
 const PlayerContextProvider = (props) => {
 
@@ -13,47 +20,241 @@ const PlayerContextProvider = (props) => {
     const [volume, setVolume] = useState(0.7);
     const [track, setTrack] = useState(null);
     const [playStatus, setPlayStatus] = useState(false);
-    const [shuffle, setShuffle] = useState(false);
-    const [loop, setLoop] = useState(false);
+    const [shuffle, setShuffle] = useState(readStoredValue(PLAYER_SHUFFLE_KEY) === 'true');
+    const [loop, setLoop] = useState(readStoredValue(PLAYER_LOOP_KEY) === 'true');
+    const [recommendations, setRecommendations] = useState([]);
+    const [genreStats, setGenreStats] = useState([]);
+    const [likedSongIds, setLikedSongIds] = useState([]);
+    const [jamendoHasMore, setJamendoHasMore] = useState(true);
+    const [jamendoLoading, setJamendoLoading] = useState(false);
+    const [jamendoError, setJamendoError] = useState("");
     const [time, setTime] = useState({
         currentTime: { second: 0, minute: 0 },
         totalTime: { second: 0, minute: 0 }
     });
+    const lastTrackedPlayId = useRef(null);
+    const didInitialLoad = useRef(false);
 
-    const fetchSongs = async () => {
+    const normalizeMediaUrl = (value) => {
+        if (!value) return value;
+
+        const baseOrigin =
+            typeof window !== "undefined" ? window.location.origin : API_URL || "http://localhost";
+
         try {
+            const url = new URL(value, API_URL || baseOrigin);
+
+            if (typeof window !== "undefined" && window.location.protocol === "https:" && url.protocol === "http:") {
+                url.protocol = "https:";
+            }
+
+            return url.toString();
+        } catch {
+            return value;
+        }
+    };
+
+    const mapSong = (song, index, fallbackPrefix = "song") => ({
+        genre: song.genre || "Pop",
+        id: song._id || `${fallbackPrefix}-${index}`,
+        externalId: song.externalId || song._id || `${fallbackPrefix}-${index}`,
+        queueIndex: index,
+        source: song.source || "local",
+        name: song.name,
+        image: normalizeMediaUrl(song.image),
+        file: normalizeMediaUrl(song.file),
+        desc: song.desc,
+        duration: song.duration,
+        album: song.album
+    });
+
+    const fetchSongs = async (force = false) => {
+        if (songsCache && !force) {
+            setSongsData(songsCache);
+            return songsCache;
+        }
+
+        if (songsRequestPromise && !force) {
+            const cachedSongs = await songsRequestPromise;
+            setSongsData(cachedSongs);
+            return cachedSongs;
+        }
+
+        songsRequestPromise = (async () => {
             const response = await fetch(`${API_URL}/api/songs`);
             const songs = await response.json();
-            const toAbsolute = (value) => {
-                if (!value) return value;
-                return value.startsWith('http') ? value : `${API_URL}${value}`;
-            };
-
-            const formattedSongs = songs.map((song, index) => ({
-                genre: song.genre || "Pop",
-                id: index,
-                name: song.name,
-                image: toAbsolute(song.image),
-                file: toAbsolute(song.file),
-                desc: song.desc,
-                duration: song.duration
-            }));
-            setSongsData(formattedSongs);
-            if (formattedSongs.length > 0 && !track) {
-                setTrack(formattedSongs[0]);
+            if (!Array.isArray(songs)) {
+                return [];
             }
+
+            return songs.map((song, index) => mapSong(song, index));
+        })();
+
+        try {
+            const formattedSongs = await songsRequestPromise;
+            setJamendoError("");
+            songsCache = formattedSongs;
+            setSongsData(formattedSongs);
+            const jamendoCount = formattedSongs.filter((song) => song.source === "jamendo").length;
+            setJamendoHasMore(jamendoCount >= JAMENDO_PAGE_SIZE);
+
+            if (formattedSongs.length === 0) {
+                setTrack(null);
+                return formattedSongs;
+            }
+
+            const storedTrackId = readStoredValue(PLAYER_TRACK_KEY);
+
+            if (!track) {
+                const storedTrack = formattedSongs.find((song) => song.id === storedTrackId);
+                setTrack(storedTrack || formattedSongs[0]);
+                return formattedSongs;
+            }
+
+            const actualTrack = formattedSongs.find(
+                (song) => song.id === track.id || song.file === track.file
+            );
+            setTrack(actualTrack || formattedSongs.find((song) => song.id === storedTrackId) || formattedSongs[0]);
+            return formattedSongs;
         } catch (error) {
             console.error('Error fetching songs:', error);
+            songsRequestPromise = null;
+            return [];
+        } finally {
+            songsRequestPromise = null;
+        }
+    };
+
+    const loadMoreJamendo = async () => {
+        if (jamendoLoading) {
+            return;
+        }
+
+        const currentJamendoCount = songsData.filter((song) => song.source === "jamendo").length;
+        setJamendoLoading(true);
+
+        try {
+            const response = await fetch(
+                `${API_URL}/api/songs?source=jamendo&offset=${currentJamendoCount}&limit=${JAMENDO_PAGE_SIZE}`
+            );
+            if (!response.ok) {
+                throw new Error("Jamendo tracks could not be loaded");
+            }
+            const data = await response.json();
+            const jamendoSongs = Array.isArray(data?.songs)
+                ? data.songs.map((song, index) =>
+                    mapSong(song, currentJamendoCount + index, "jamendo")
+                )
+                : [];
+
+            setJamendoError("");
+            setJamendoHasMore(Boolean(data?.hasMore) && jamendoSongs.length > 0);
+
+            if (jamendoSongs.length === 0) {
+                return;
+            }
+
+            setSongsData((prev) => {
+                const existingIds = new Set(prev.map((song) => song.id));
+                const merged = [
+                    ...prev,
+                    ...jamendoSongs.filter((song) => !existingIds.has(song.id))
+                ];
+                songsCache = merged;
+                return merged;
+            });
+        } catch (error) {
+            console.error("Error loading more Jamendo songs:", error);
+            setJamendoError("Не удалось загрузить следующую страницу Jamendo. Перезапусти backend и попробуй снова.");
+        } finally {
+            setJamendoLoading(false);
+        }
+    };
+
+    const getAuthHeaders = () => {
+        const token = readStoredValue('token');
+
+        return token
+            ? {
+                Authorization: `Bearer ${token}`
+            }
+            : {};
+    };
+
+    const sendInteraction = async (path, body) => {
+        const headers = getAuthHeaders();
+        if (!headers.Authorization) {
+            return null;
+        }
+
+        const response = await fetch(`${API_URL}/api/${path}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...headers
+            },
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Interaction request failed: ${path}`);
+        }
+
+        return response.json();
+    };
+
+    const fetchRecommendations = async () => {
+        const headers = getAuthHeaders();
+        if (!headers.Authorization) {
+            setRecommendations([]);
+            setGenreStats([]);
+            setLikedSongIds([]);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/api/recommendations`, {
+                headers
+            });
+
+            if (!response.ok) {
+                throw new Error('Recommendations request failed');
+            }
+
+            const data = await response.json();
+            const formattedRecommendations = Array.isArray(data.songs)
+                ? data.songs.map((song, index) => ({
+                    ...mapSong(song, index, "recommended")
+                }))
+                : [];
+
+            setRecommendations(formattedRecommendations);
+            setGenreStats(Array.isArray(data.stats) ? data.stats : []);
+            setLikedSongIds(Array.isArray(data.likedSongIds) ? data.likedSongIds : []);
+        } catch (error) {
+            console.error('Error fetching recommendations:', error);
         }
     };
 
     useEffect(() => {
-        fetchSongs();
-    }, []);
-
-    useEffect(() => {
         if (audioRef.current) audioRef.current.volume = volume;
     }, [volume]);
+
+    useEffect(() => {
+        if (track?.id) {
+            writeStoredValue(PLAYER_TRACK_KEY, track.id);
+        } else {
+            removeStoredValue(PLAYER_TRACK_KEY);
+        }
+    }, [track]);
+
+    useEffect(() => {
+        writeStoredValue(PLAYER_LOOP_KEY, String(loop));
+    }, [loop]);
+
+    useEffect(() => {
+        writeStoredValue(PLAYER_SHUFFLE_KEY, String(shuffle));
+    }, [shuffle]);
 
     const play = () => {
         if (!audioRef.current) return;
@@ -68,18 +269,25 @@ const PlayerContextProvider = (props) => {
     }
 
     const playWithId = (id) => {
-        if (songsData[id]) {
-            setTrack(songsData[id]);
+        const selectedTrack = songsData.find(
+            (song) => song.id === id || song.queueIndex === id
+        );
+
+        if (selectedTrack) {
+            setTrack(selectedTrack);
             setPlayStatus(true);
         }
     }
 
     const previous = async () => {
         if (!track || songsData.length === 0) return;
-        let prevIndex = track.id - 1;
+        const currentIndex = songsData.findIndex((song) => song.id === track.id);
+        if (currentIndex === -1) return;
+
+        let prevIndex = currentIndex - 1;
         if (shuffle && songsData.length > 1) {
-            let rand = track.id;
-            while (rand === track.id) {
+            let rand = currentIndex;
+            while (rand === currentIndex) {
                 rand = Math.floor(Math.random() * songsData.length);
             }
             prevIndex = rand;
@@ -94,10 +302,13 @@ const PlayerContextProvider = (props) => {
 
     const next = async () => {
         if (!track || songsData.length === 0) return;
-        let nextIndex = track.id + 1;
+        const currentIndex = songsData.findIndex((song) => song.id === track.id);
+        if (currentIndex === -1) return;
+
+        let nextIndex = currentIndex + 1;
         if (shuffle && songsData.length > 1) {
-            let rand = track.id;
-            while (rand === track.id) {
+            let rand = currentIndex;
+            while (rand === currentIndex) {
                 rand = Math.floor(Math.random() * songsData.length);
             }
             nextIndex = rand;
@@ -109,6 +320,39 @@ const PlayerContextProvider = (props) => {
         setTrack(songsData[nextIndex]);
         setPlayStatus(true);
     }
+
+    const refreshRecommendations = useEffectEvent(() => {
+        fetchRecommendations();
+    });
+
+    const registerInteraction = useEffectEvent(async (path, body) => {
+        return sendInteraction(path, body);
+    });
+
+    const playNextTrack = useEffectEvent(() => {
+        next();
+    });
+
+    useEffect(() => {
+        if (didInitialLoad.current) {
+            return;
+        }
+
+        didInitialLoad.current = true;
+        fetchSongs();
+        fetchRecommendations();
+    }, []);
+
+    useEffect(() => {
+        const handleAuthChanged = () => {
+            refreshRecommendations();
+        };
+
+        window.addEventListener('auth-changed', handleAuthChanged);
+        return () => {
+            window.removeEventListener('auth-changed', handleAuthChanged);
+        };
+    }, [refreshRecommendations]);
 
     const seekSong = (e) => {
         audioRef.current.currentTime = ((e.nativeEvent.offsetX / seekBg.current.clientWidth) * audioRef.current.duration);
@@ -125,10 +369,36 @@ const PlayerContextProvider = (props) => {
         if (!audioRef.current || !track) return;
         const audio = audioRef.current;
         audio.src = track.file;
+        audio.load();
         if (playStatus) {
-            audio.play().catch(() => { });
+            audio.play().catch((error) => {
+                console.error('Audio playback failed:', track.file, error);
+                setPlayStatus(false);
+            });
         }
     }, [track, playStatus]);
+
+    useEffect(() => {
+        if (!track || !playStatus) {
+            return;
+        }
+
+        if (lastTrackedPlayId.current === track.id) {
+            return;
+        }
+
+        lastTrackedPlayId.current = track.id;
+
+        registerInteraction('interactions/play', {
+            songId: track.id,
+            source: track.source,
+            genre: track.genre
+        })
+            .then(() => refreshRecommendations())
+            .catch((error) => {
+                console.error('Failed to register play:', error);
+            });
+    }, [track, playStatus, registerInteraction, refreshRecommendations]);
 
     useEffect(() => {
         if (!audioRef.current) return;
@@ -155,24 +425,71 @@ const PlayerContextProvider = (props) => {
         }, 1000);
 
         audio.onended = () => {
+            registerInteraction('interactions/full-listen', {
+                songId: track?.id,
+                source: track?.source,
+                genre: track?.genre
+            })
+                .then(() => refreshRecommendations())
+                .catch((error) => {
+                    console.error('Failed to register full listen:', error);
+                });
+
             if (loop) {
                 audio.currentTime = 0;
                 audio.play().catch(() => { });
                 setPlayStatus(true);
             } else {
-                next();
+                playNextTrack();
             }
+        };
+
+        audio.onerror = () => {
+            const mediaError = audio.error;
+            console.error('Audio element error:', {
+                trackName: track?.name,
+                file: track?.file,
+                code: mediaError?.code,
+                message: mediaError?.message
+            });
+            setPlayStatus(false);
         };
 
         return () => {
             clearTimeout(timer);
             audio.ontimeupdate = null;
             audio.onended = null;
+            audio.onerror = null;
         };
-    }, [audioRef, loop, shuffle, songsData, track]);
+    }, [loop, track, registerInteraction, refreshRecommendations, playNextTrack]);
 
     const toggleShuffle = () => setShuffle(prev => !prev);
     const toggleLoop = () => setLoop(prev => !prev);
+    const isTrackLiked = track ? likedSongIds.includes(track.id) : false;
+
+    const toggleLikeTrack = async () => {
+        if (!track) return;
+
+        const nextLiked = !likedSongIds.includes(track.id);
+
+        try {
+            await sendInteraction('interactions/like', {
+                songId: track.id,
+                source: track.source,
+                genre: track.genre,
+                liked: nextLiked
+            });
+
+            setLikedSongIds((prev) =>
+                nextLiked
+                    ? [...new Set([...prev, track.id])]
+                    : prev.filter((id) => id !== track.id)
+            );
+            refreshRecommendations();
+        } catch (error) {
+            console.error('Failed to toggle like:', error);
+        }
+    };
 
     const contextValue = {
         audioRef,
@@ -193,6 +510,16 @@ const PlayerContextProvider = (props) => {
         toggleLoop,
         songsData,
         fetchSongs,
+        loadMoreJamendo,
+        jamendoHasMore,
+        jamendoLoading,
+        jamendoError,
+        recommendations,
+        genreStats,
+        fetchRecommendations,
+        likedSongIds,
+        isTrackLiked,
+        toggleLikeTrack,
         volume,
         setVolume
     }
@@ -204,4 +531,3 @@ const PlayerContextProvider = (props) => {
 }
 
 export default PlayerContextProvider;
-

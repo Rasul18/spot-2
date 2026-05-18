@@ -1,0 +1,239 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "All: Up",
+            "dependsOrder": "parallel",
+            "dependsOn": [
+                "Backend: Up",
+                "Frontend: Up"
+            ],
+            "problemMatcher": [],
+            "options": {
+                "statusbar": {
+                    "label": "$(play) All Up",
+                    "color": "#2ECC71",
+                    "detail": "Start backend and frontend"
+                }
+            }
+        },
+        {
+            "label": "All: Down",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Frontend: Down",
+                "Backend: Down"
+            ],
+            "problemMatcher": [],
+            "options": {
+                "statusbar": {
+                    "label": "$(debug-stop) All Down",
+                    "color": "#E74C3C",
+                    "detail": "Stop backend and frontend"
+                }
+            }
+        },
+        {
+            "label": "All: Restart",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "All: Down",
+                "All: Up"
+            ],
+            "problemMatcher": [],
+            "options": {
+                "statusbar": {
+                    "label": "$(refresh) All Restart",
+                    "color": "#F39C12",
+                    "detail": "Restart backend and frontend"
+                }
+            }
+        },
+        {
+            "label": "Separator: All / Backend",
+            "type": "shell",
+            "command": "printf ''",
+            "options": {
+                "cwd": "/opt/spot-2-1",
+                "statusbar": {
+                    "label": "|",
+                    "color": "#6B7280",
+                    "detail": "Section separator"
+                }
+            },
+            "presentation": {
+                "reveal": "never",
+                "panel": "shared",
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Backend: Up",
+            "type": "shell",
+            "command": "npm run dev",
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}/spotify-back-end2",
+                "statusbar": {
+                    "label": "$(play) Backend Up",
+                    "color": "#2ECC71",
+                    "detail": "Start backend dev server"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "group": "backend",
+                "clear": true
+            },
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": "."
+                        }
+                    ],
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": ".",
+                        "endsPattern": "Server is running on http://0.0.0.0:5000"
+                    }
+                }
+            ]
+        },
+        {
+            "label": "Backend: Down",
+            "type": "shell",
+            "command": "pkill",
+            "args": [
+                "-f",
+                "nodemon server.js|node server.js"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/spotify-back-end2",
+                "statusbar": {
+                    "label": "$(debug-stop) Backend Down",
+                    "color": "#E74C3C",
+                    "detail": "Stop backend dev server"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "group": "backend",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Backend: Restart",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Backend: Down",
+                "Backend: Up"
+            ],
+            "problemMatcher": [],
+            "options": {
+                "statusbar": {
+                    "label": "$(refresh) Backend Restart",
+                    "color": "#F39C12",
+                    "detail": "Restart backend dev server"
+                }
+            }
+        },
+        {
+            "label": "Separator: Backend / Frontend",
+            "type": "shell",
+            "command": "printf ''",
+            "options": {
+                "cwd": "/opt/spot-2-1",
+                "statusbar": {
+                    "label": "|",
+                    "color": "#6B7280",
+                    "detail": "Section separator"
+                }
+            },
+            "presentation": {
+                "reveal": "never",
+                "panel": "shared",
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Frontend: Up",
+            "type": "shell",
+            "command": "npm run dev",
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}/Spotify-clone",
+                "statusbar": {
+                    "label": "$(play) Frontend Up",
+                    "color": "#2ECC71",
+                    "detail": "Start frontend dev server"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "group": "frontend",
+                "clear": true
+            },
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": "."
+                        }
+                    ],
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": ".",
+                        "endsPattern": "ready in .*"
+                    }
+                }
+            ]
+        },
+        {
+            "label": "Frontend: Down",
+            "type": "shell",
+            "command": "pkill",
+            "args": [
+                "-f",
+                "vite"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/Spotify-clone",
+                "statusbar": {
+                    "label": "$(debug-stop) Frontend Down",
+                    "color": "#E74C3C",
+                    "detail": "Stop frontend dev server"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "group": "frontend",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Frontend: Restart",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Frontend: Down",
+                "Frontend: Up"
+            ],
+            "problemMatcher": [],
+            "options": {
+                "statusbar": {
+                    "label": "$(refresh) Frontend Restart",
+                    "color": "#F39C12",
+                    "detail": "Restart frontend dev server"
+                }
+            }
+        }
+    ]
+}

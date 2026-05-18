@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react'
-import { PlayerContext } from '../context/PlayerContext'
+import { PlayerContext } from '../context/player-context'
 import API_URL from '../config/api'
 import GENRES from './genres.js'
 import jsmediatags from 'jsmediatags/dist/jsmediatags.min.js'
@@ -119,7 +119,7 @@ const AddSong = () => {
                 setFormData({ name: '', desc: '', duration: '', album: '', genre: GENRES[0] })
                 setAudioFile(null)
                 setImageFile(null)
-                fetchSongs()
+                fetchSongs(true)
             } else {
                 const message = response.status === 413
                     ? 'Файл слишком большой. Максимальный размер: 200 MB'
