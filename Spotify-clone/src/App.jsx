@@ -7,11 +7,11 @@ import { PlayerContext } from "./context/player-context";
 
 const App = () => {
 
-  const { audioRef, track } = useContext(PlayerContext);
+  const { audioRef, track, theme } = useContext(PlayerContext);
 
   return (
-    <div className="h-screen bg-black">
-      <div className="h-[90%] flex">
+    <div className={theme === 'dark' ? 'min-h-screen bg-slate-950 text-slate-100' : 'min-h-screen bg-slate-100 text-slate-900'}>
+      <div className="flex min-h-screen flex-col lg:flex-row lg:items-stretch">
         <Sidebar />
         <Display />
       </div>

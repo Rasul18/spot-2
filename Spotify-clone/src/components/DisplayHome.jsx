@@ -9,8 +9,9 @@ import GENRES from './genres.js'
 
 const DisplayHome = () => {
   const [selectedGenre, setSelectedGenre] = useState('All')
-  const { songsData, recommendations, genreStats, loadMoreJamendo, jamendoHasMore, jamendoLoading, jamendoError } = useContext(PlayerContext)
+  const { songsData, recommendations, genreStats, loadMoreJamendo, jamendoHasMore, jamendoLoading, jamendoError, theme } = useContext(PlayerContext)
   const jamendoScrollerRef = useRef(null)
+  const isDark = theme === 'dark'
   const jamendoSongs = useMemo(
     () => songsData.filter((song) => song.source === 'jamendo'),
     [songsData]
@@ -63,7 +64,7 @@ const DisplayHome = () => {
             <button
               key={genre}
               onClick={() => setSelectedGenre(genre)}
-              className={`px-4 py-1 rounded-full text-sm whitespace-nowrap ${selectedGenre === genre ? 'bg-white text-black' : 'bg-[#ffffff26] text-white'
+              className={`px-4 py-1 rounded-full text-sm whitespace-nowrap ${selectedGenre === genre ? isDark ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-white' : isDark ? 'bg-slate-900 text-slate-200 ring-1 ring-slate-800' : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'
                 }`}
             >
               {genre}
@@ -79,7 +80,7 @@ const DisplayHome = () => {
             <button
               type='button'
               onClick={() => scrollJamendo(-1)}
-              className='rounded-full bg-[#ffffff14] p-2 transition hover:bg-[#ffffff26]'
+              className={`rounded-full p-2 transition ${isDark ? 'bg-slate-900 ring-1 ring-slate-800 hover:bg-slate-800' : 'bg-white ring-1 ring-slate-200 hover:bg-slate-50'}`}
               aria-label='Прокрутить Jamendo влево'
             >
               <img className='w-4' src={assets.arrow_left} alt='' />
@@ -87,7 +88,7 @@ const DisplayHome = () => {
             <button
               type='button'
               onClick={() => scrollJamendo(1)}
-              className='rounded-full bg-[#ffffff14] p-2 transition hover:bg-[#ffffff26]'
+              className={`rounded-full p-2 transition ${isDark ? 'bg-slate-900 ring-1 ring-slate-800 hover:bg-slate-800' : 'bg-white ring-1 ring-slate-200 hover:bg-slate-50'}`}
               aria-label='Прокрутить Jamendo вправо'
             >
               <img className='w-4' src={assets.arrow_right} alt='' />
@@ -95,7 +96,7 @@ const DisplayHome = () => {
           </div>
         </div>
         {jamendoSongs.length === 0 ? (
-          <p className='text-slate-300'>Jamendo-треки пока не загрузились.</p>
+          <p className={isDark ? 'text-slate-400' : 'text-slate-500'}>Jamendo-треки пока не загрузились.</p>
         ) : (
           <>
             <div
@@ -119,16 +120,16 @@ const DisplayHome = () => {
                   type='button'
                   onClick={loadMoreJamendo}
                   disabled={jamendoLoading}
-                  className='rounded-full bg-white px-4 py-2 text-sm font-semibold text-black disabled:opacity-60'
+                  className={`rounded-full px-4 py-2 text-sm font-semibold disabled:opacity-60 ${isDark ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-white'}`}
                 >
                   {jamendoLoading ? 'Загружаю...' : 'Показать еще из Jamendo'}
                 </button>
               ) : (
-                <p className='text-sm text-slate-400'>Все доступные Jamendo-треки уже загружены.</p>
+                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Все доступные Jamendo-треки уже загружены.</p>
               )}
-              <p className='text-xs text-slate-500'>Подсказка: можно листать стрелками или горизонтальным скроллом.</p>
+              <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Подсказка: можно листать стрелками или горизонтальным скроллом.</p>
             </div>
-            {jamendoError && <p className='mt-2 text-sm text-red-400'>{jamendoError}</p>}
+            {jamendoError && <p className='mt-2 text-sm text-rose-600'>{jamendoError}</p>}
           </>
         )}
       </div>
@@ -136,7 +137,7 @@ const DisplayHome = () => {
       <div className='mb-4'>
         <h1 className='my-5 font-bold text-2xl'>Рекомендации для тебя</h1>
         {recommendations.length === 0 ? (
-          <p className='text-slate-300'>
+          <p className={isDark ? 'text-slate-300' : 'text-slate-600'}>
             Послушай несколько треков и поставь лайки. После этого рекомендации начнут считаться по формуле:
             score = plays * 1 + full_listens * 2 + likes * 3.
           </p>
@@ -155,9 +156,9 @@ const DisplayHome = () => {
           </div>
         )}
         {genreStats.length > 0 && (
-          <div className='mt-3 flex flex-wrap gap-2 text-sm text-slate-300'>
+          <div className={`mt-3 flex flex-wrap gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
             {genreStats.map((item) => (
-              <div key={item.genre} className='rounded-full bg-[#ffffff14] px-3 py-1'>
+              <div key={item.genre} className={`rounded-full px-3 py-1 ${isDark ? 'bg-slate-900 ring-1 ring-slate-800' : 'bg-white ring-1 ring-slate-200'}`}>
                 {item.genre}: {item.score}
               </div>
             ))}
@@ -166,7 +167,7 @@ const DisplayHome = () => {
       </div>
 
       <div className='mb-4'>
-        {!hasSongs && <p className='text-slate-300'>По этому жанру песен пока нет.</p>}
+        {!hasSongs && <p className={isDark ? 'text-slate-400' : 'text-slate-500'}>По этому жанру песен пока нет.</p>}
 
         {Object.entries(groupedByGenre).map(([genre, songs]) => (
           <div key={genre} className='mb-6'>

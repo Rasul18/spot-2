@@ -19,10 +19,11 @@ const savePlaylists = (playlists) => {
 }
 
 const Playlists = () => {
-  const { songsData } = useContext(PlayerContext)
+  const { songsData, theme } = useContext(PlayerContext)
   const [playlists, setPlaylists] = useState([])
   const [name, setName] = useState('')
   const [activeId, setActiveId] = useState(null)
+  const isDark = theme === 'dark'
 
   useEffect(() => {
     const stored = loadPlaylists()
@@ -94,46 +95,46 @@ const Playlists = () => {
 
       <div className='flex flex-col md:flex-row gap-4'>
         <div className='md:w-[260px]'>
-          <div className='bg-[#181818] p-4 rounded'>
+          <div className={`rounded-[28px] border p-4 shadow-sm ${isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'}`}>
             <p className='font-semibold mb-2'>Create playlist</p>
             <input
               type='text'
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder='Playlist name'
-              className='w-full p-2 rounded bg-[#1f1f1f] text-white'
+              className={`w-full rounded-2xl border p-3 ${isDark ? 'border-slate-800 bg-slate-950 text-slate-100' : 'border-slate-200 bg-slate-50 text-slate-900'}`}
             />
             <button
               onClick={createPlaylist}
-              className='w-full mt-3 px-4 py-2 bg-white text-black rounded-full'
+              className={`mt-3 w-full rounded-full px-4 py-2 ${isDark ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-white'}`}
             >
               Create
             </button>
           </div>
 
-          <div className='bg-[#181818] p-4 rounded mt-4'>
+          <div className={`mt-4 rounded-[28px] border p-4 shadow-sm ${isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'}`}>
             <p className='font-semibold mb-2'>Your playlists</p>
             {playlists.length === 0 ? (
-              <p className='text-[#b3b3b3]'>No playlists yet.</p>
+              <p className={isDark ? 'text-slate-400' : 'text-slate-500'}>No playlists yet.</p>
             ) : (
               <div className='flex flex-col gap-2'>
                 {playlists.map((p) => (
                   <div
                     key={p.id}
-                    className={`flex items-center justify-between p-2 rounded cursor-pointer ${activeId === p.id ? 'bg-[#2a2a2a]' : 'bg-[#1f1f1f]'
+                    className={`flex items-center justify-between rounded-2xl p-2 cursor-pointer ${activeId === p.id ? isDark ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-white' : isDark ? 'bg-slate-950' : 'bg-slate-50'
                       }`}
                   >
                     <button
                       type="button"
                       onClick={() => setActiveId(p.id)}
-                      className='flex-1 text-left text-white'
+                      className='flex-1 text-left'
                     >
                       {p.name}
                     </button>
                     <button
                       type="button"
                       onClick={() => removePlaylist(p.id)}
-                      className='text-xs text-[#b3b3b3] hover:text-white'
+                      className={`text-xs ${activeId === p.id ? isDark ? 'text-slate-900' : 'text-slate-200' : isDark ? 'text-slate-400 hover:text-slate-100' : 'text-slate-500 hover:text-slate-900'}`}
                     >
                       Delete
                     </button>
@@ -147,18 +148,18 @@ const Playlists = () => {
 
         <div className='flex-1'>
           {!activePlaylist ? (
-            <p className='text-[#b3b3b3]'>Select or create a playlist.</p>
+            <p className={isDark ? 'text-slate-400' : 'text-slate-500'}>Select or create a playlist.</p>
           ) : (
             <>
               <h2 className='text-2xl font-bold mb-3'>{activePlaylist.name}</h2>
-              <p className='text-[#b3b3b3] mb-4'>
+              <p className={`mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                 {playlistSongs.length} song{playlistSongs.length === 1 ? '' : 's'}
               </p>
 
               <div className='mb-6'>
                 <p className='font-semibold mb-2'>In playlist</p>
                 {playlistSongs.length === 0 ? (
-                  <p className='text-[#b3b3b3]'>No songs yet.</p>
+                  <p className={isDark ? 'text-slate-400' : 'text-slate-500'}>No songs yet.</p>
                 ) : (
                   <div className='flex flex-wrap gap-3'>
                     {playlistSongs.map((item) => (
@@ -171,7 +172,7 @@ const Playlists = () => {
                         />
                         <button
                           onClick={() => removeSong(item.id)}
-                          className='absolute top-2 right-2 hidden group-hover:block bg-black/70 text-white text-xs px-2 py-1 rounded'
+                          className='absolute right-2 top-2 hidden rounded-full bg-white/95 px-2 py-1 text-xs text-rose-600 shadow-sm ring-1 ring-slate-200 group-hover:block'
                         >
                           Remove
                         </button>
@@ -184,7 +185,7 @@ const Playlists = () => {
               <div>
                 <p className='font-semibold mb-2'>Add songs</p>
                 {availableSongs.length === 0 ? (
-                  <p className='text-[#b3b3b3]'>All songs are already added.</p>
+                  <p className={isDark ? 'text-slate-400' : 'text-slate-500'}>All songs are already added.</p>
                 ) : (
                   <div className='flex flex-wrap gap-3'>
                     {availableSongs.map((item) => (
@@ -197,7 +198,7 @@ const Playlists = () => {
                         />
                         <button
                           onClick={() => addSong(item.id)}
-                          className='absolute top-2 right-2 hidden group-hover:block bg-black/70 text-white text-xs px-2 py-1 rounded'
+                          className='absolute right-2 top-2 hidden rounded-full bg-white/95 px-2 py-1 text-xs text-slate-700 shadow-sm ring-1 ring-slate-200 group-hover:block'
                         >
                           Add
                         </button>

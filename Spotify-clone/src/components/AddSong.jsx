@@ -5,7 +5,7 @@ import GENRES from './genres.js'
 import jsmediatags from 'jsmediatags/dist/jsmediatags.min.js'
 
 const AddSong = () => {
-    const { fetchSongs } = useContext(PlayerContext)
+    const { fetchSongs, theme } = useContext(PlayerContext)
     const [formData, setFormData] = useState({
         name: '',
         desc: '',
@@ -17,6 +17,7 @@ const AddSong = () => {
     const [imageFile, setImageFile] = useState(null)
     const [loading, setLoading] = useState(false)
     const [message, setMessage] = useState('')
+    const isDark = theme === 'dark'
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
@@ -135,8 +136,8 @@ const AddSong = () => {
     }
 
     return (
-        <div className='p-6 bg-[#242424] rounded text-white'>
-            <h2 className='text-2xl font-bold mb-4'>Добавить новую песню</h2>
+        <div className={`rounded-[28px] border p-6 shadow-sm ${isDark ? 'border-slate-800 bg-slate-900 text-slate-100' : 'border-slate-200 bg-white text-slate-900'}`}>
+            <h2 className='mb-4 text-2xl font-bold'>Добавить новую песню</h2>
 
             <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
                 <input
@@ -146,7 +147,7 @@ const AddSong = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className='p-2 rounded bg-[#333333] text-white'
+                    className={`rounded-2xl border p-3 outline-none ${isDark ? 'border-slate-800 bg-slate-950 text-slate-100' : 'border-slate-200 bg-slate-50 text-slate-900'}`}
                 />
 
                 <input
@@ -156,7 +157,7 @@ const AddSong = () => {
                     value={formData.desc}
                     onChange={handleInputChange}
                     required
-                    className='p-2 rounded bg-[#333333] text-white'
+                    className={`rounded-2xl border p-3 outline-none ${isDark ? 'border-slate-800 bg-slate-950 text-slate-100' : 'border-slate-200 bg-slate-50 text-slate-900'}`}
                 />
 
                 <input
@@ -166,7 +167,7 @@ const AddSong = () => {
                     value={formData.duration}
                     onChange={handleInputChange}
                     required
-                    className='p-2 rounded bg-[#333333] text-white'
+                    className={`rounded-2xl border p-3 outline-none ${isDark ? 'border-slate-800 bg-slate-950 text-slate-100' : 'border-slate-200 bg-slate-50 text-slate-900'}`}
                 />
 
                 <input
@@ -176,14 +177,14 @@ const AddSong = () => {
                     value={formData.album}
                     onChange={handleInputChange}
                     required
-                    className='p-2 rounded bg-[#333333] text-white'
+                    className={`rounded-2xl border p-3 outline-none ${isDark ? 'border-slate-800 bg-slate-950 text-slate-100' : 'border-slate-200 bg-slate-50 text-slate-900'}`}
                 />
 
                 <select
                     name="genre"
                     value={formData.genre}
                     onChange={handleInputChange}
-                    className='p-2 rounded bg-[#333333] text-white'
+                    className={`rounded-2xl border p-3 outline-none ${isDark ? 'border-slate-800 bg-slate-950 text-slate-100' : 'border-slate-200 bg-slate-50 text-slate-900'}`}
                 >
                     {GENRES.map((genre) => (
                         <option key={genre} value={genre}>
@@ -193,41 +194,41 @@ const AddSong = () => {
                 </select>
 
                 <div>
-                    <label className='block mb-2'>Аудиофайл (MP3)</label>
+                    <label className={`mb-2 block font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Аудиофайл (MP3)</label>
                     <input
                         type="file"
                         accept="audio/*,.mp3,.m4a,.wav,.ogg,.mp4,video/mp4"
 
                         onChange={handleAudioChange}
                         required
-                        className='p-2 rounded bg-[#333333] w-full'
+                        className={`w-full rounded-2xl border p-3 ${isDark ? 'border-slate-800 bg-slate-950' : 'border-slate-200 bg-slate-50'}`}
                     />
-                    {audioFile && <p className='text-sm text-green-400 mt-1'>✓ {audioFile.name}</p>}
+                    {audioFile && <p className='mt-1 text-sm text-emerald-600'>✓ {audioFile.name}</p>}
                 </div>
 
                 <div>
-                    <label className='block mb-2'>Обложка альбома</label>
+                    <label className={`mb-2 block font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Обложка альбома</label>
                     <input
                         type="file"
                         accept="image/*"
                         onChange={handleImageChange}
                         required
-                        className='p-2 rounded bg-[#333333] w-full'
+                        className={`w-full rounded-2xl border p-3 ${isDark ? 'border-slate-800 bg-slate-950' : 'border-slate-200 bg-slate-50'}`}
                     />
-                    {imageFile && <p className='text-sm text-green-400 mt-1'>✓ {imageFile.name}</p>}
+                    {imageFile && <p className='mt-1 text-sm text-emerald-600'>✓ {imageFile.name}</p>}
                 </div>
 
                 <button
                     type="submit"
                     disabled={loading}
-                    className='px-4 py-2 bg-green-500 text-black font-bold rounded hover:bg-green-600 disabled:bg-gray-500'
+                    className={`rounded-full px-4 py-3 font-bold disabled:bg-slate-300 ${isDark ? 'bg-emerald-500 text-slate-950 hover:bg-emerald-400' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
                 >
                     {loading ? 'Загрузка...' : 'Добавить песню'}
                 </button>
             </form>
 
             {message && (
-                <p className={`mt-4 p-2 rounded ${message.includes('✅') ? 'bg-green-500' : 'bg-red-500'}`}>
+                <p className={`mt-4 rounded-2xl p-3 ${message.includes('✅') ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-rose-50 text-rose-700 ring-1 ring-rose-200'}`}>
                     {message}
                 </p>
             )}

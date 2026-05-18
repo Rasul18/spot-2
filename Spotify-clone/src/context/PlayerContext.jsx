@@ -6,6 +6,7 @@ import { readStoredValue, removeStoredValue, writeStoredValue } from "../utils/s
 const PLAYER_TRACK_KEY = 'player-track-id';
 const PLAYER_LOOP_KEY = 'player-loop-enabled';
 const PLAYER_SHUFFLE_KEY = 'player-shuffle-enabled';
+const THEME_KEY = 'app-theme';
 let songsCache = null;
 let songsRequestPromise = null;
 const JAMENDO_PAGE_SIZE = 12;
@@ -22,6 +23,7 @@ const PlayerContextProvider = (props) => {
     const [playStatus, setPlayStatus] = useState(false);
     const [shuffle, setShuffle] = useState(readStoredValue(PLAYER_SHUFFLE_KEY) === 'true');
     const [loop, setLoop] = useState(readStoredValue(PLAYER_LOOP_KEY) === 'true');
+    const [theme, setTheme] = useState(readStoredValue(THEME_KEY) === 'dark' ? 'dark' : 'light');
     const [recommendations, setRecommendations] = useState([]);
     const [genreStats, setGenreStats] = useState([]);
     const [likedSongIds, setLikedSongIds] = useState([]);
@@ -256,6 +258,15 @@ const PlayerContextProvider = (props) => {
         writeStoredValue(PLAYER_SHUFFLE_KEY, String(shuffle));
     }, [shuffle]);
 
+    useEffect(() => {
+        writeStoredValue(THEME_KEY, theme);
+        if (typeof document !== "undefined") {
+            document.documentElement.dataset.theme = theme;
+            document.body.style.background = theme === 'dark' ? '#020617' : '#f1f5f9';
+            document.body.style.color = theme === 'dark' ? '#e2e8f0' : '#0f172a';
+        }
+    }, [theme]);
+
     const play = () => {
         if (!audioRef.current) return;
         audioRef.current.play().catch(() => { });
@@ -465,6 +476,7 @@ const PlayerContextProvider = (props) => {
 
     const toggleShuffle = () => setShuffle(prev => !prev);
     const toggleLoop = () => setLoop(prev => !prev);
+    const toggleTheme = () => setTheme((prev) => prev === 'dark' ? 'light' : 'dark');
     const isTrackLiked = track ? likedSongIds.includes(track.id) : false;
 
     const toggleLikeTrack = async () => {
@@ -520,6 +532,8 @@ const PlayerContextProvider = (props) => {
         likedSongIds,
         isTrackLiked,
         toggleLikeTrack,
+        theme,
+        toggleTheme,
         volume,
         setVolume
     }

@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+html, body, #root {
+    min-height: 100%;
+}
+
+body {
+    background: #f1f5f9;
+    color: #0f172a;
+    transition: background-color 180ms ease, color 180ms ease;
+}
+
 ::-webkit-scrollbar{
     display:none;
 }

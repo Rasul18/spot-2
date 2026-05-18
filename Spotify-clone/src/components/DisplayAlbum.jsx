@@ -7,8 +7,9 @@ import { PlayerContext } from '../context/player-context'
 
 
 const DisplayAlbum = () => {
-    const { playWithId, songsData } = useContext(PlayerContext);
+    const { playWithId, songsData, theme } = useContext(PlayerContext);
     const { id } = useParams();
+    const isDark = theme === 'dark';
     const albumData = albumsData[id];
     const albumSongs = songsData.filter((song) => song.album === albumData?.name);
     const visibleSongs = albumSongs.length > 0 ? albumSongs : songsData;
@@ -17,7 +18,7 @@ const DisplayAlbum = () => {
         return (
             <>
                 <Navbar />
-                <div className='mt-10 rounded bg-[#1a1a1a] p-6 text-[#b3b3b3]'>
+                <div className={`mt-10 rounded-3xl p-6 ${isDark ? 'bg-slate-900 text-slate-400' : 'bg-white text-slate-500'}`}>
                     Альбом не найден.
                 </div>
             </>
@@ -42,7 +43,7 @@ const DisplayAlbum = () => {
                     </p>
                 </div>
             </div>
-            <div className='grid grid-cols-3 sm:grid-cols-4 mt-10 mb-4 pl-2 text-[#a7a7a7]'>
+            <div className={`grid grid-cols-3 sm:grid-cols-4 mt-10 mb-4 pl-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                 <p><b className='mr-4'>#</b>Title</p>
                 <p>Album</p>
                 <p className='hidden sm:block'>Date Added</p>
@@ -51,9 +52,9 @@ const DisplayAlbum = () => {
             <hr />
             {
                 visibleSongs.map((item, index) => (
-                    <div onClick={() => playWithId(item.id)} key={index} className='grid grid-cols-3 sm:grid-cols-4 gap-2 p-2 items-center text-[#a7a7a7] hover:bg-[#ffffff2b] rounded cursor-pointer'>
-                        <p className='text-white'>
-                            <b className='mr-4 text-[#a7a7a7]'>{index + 1}</b>
+                    <div onClick={() => playWithId(item.id)} key={index} className={`grid grid-cols-3 sm:grid-cols-4 gap-2 p-2 items-center rounded cursor-pointer ${isDark ? 'text-slate-400 hover:bg-slate-900' : 'text-slate-500 hover:bg-white/80'}`}>
+                        <p className={isDark ? 'text-slate-100' : 'text-slate-900'}>
+                            <b className={`mr-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{index + 1}</b>
                             <img className='inline w-10 mr-5' src={item.image} alt="" />
                             {item.name}
                         </p>
